@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMART Launch</title>
+</head>
+<body>
+    <p>Launching SMART on FHIR app...</p>
+    
+    <script src="https://cdn.jsdelivr.net/npm/fhirclient@2.5.2/build/fhir-client.min.js"></script>
+    <script>
+        FHIR.oauth2.authorize({
+            clientId: 'YOUR_CLIENT_ID_HERE',
+            scope: 'launch patient/Patient.read patient/DocumentReference.read',
+            redirectUri: './index.html'
+        });
+    </script>
+</body>
+</html>
+```
+   - Click "Commit new file"
+
+3. **Second file - index.html:**
+   - Click "Add file" → "Create new file" again
+   - Name: `index.html`
+   - Paste the full index.html content from my previous response
+   - Click "Commit new file"
+
+4. **Third file - app.js:**
+   - Click "Add file" → "Create new file" again
+   - Name: `app.js`
+   - Paste the full app.js content from my previous response
+   - Click "Commit new file"
+
+---
+
+## **Phase 2: Deploying to the Web**
+
+You need a web hosting service that:
+- Provides **HTTPS** (required for OAuth2 security)
+- Allows you to host static files
+- Is free or low-cost for testing
+
+**Best options for beginners:**
+
+---
+
+### **Option A: Netlify (Recommended - Easiest)**
+
+**Why Netlify:** 
+- Free tier is generous
+- Automatic HTTPS
+- Connects directly to GitHub
+- Deploys automatically when you update code
+
+**Steps:**
+
+1. **Sign up for Netlify**
+   - Go to: https://www.netlify.com
+   - Click "Sign up"
+   - Choose "Sign up with GitHub" (easiest - it connects automatically)
+   - Authorize Netlify to access your GitHub
+
+2. **Create a new site**
+   - Click "Add new site" → "Import an existing project"
+   - Click "GitHub"
+   - Find and select your `clinical-docs-viewer` repository
+   - Click on it
+
+3. **Configure build settings**
+   - **Build command:** Leave empty (we don't need to build anything)
+   - **Publish directory:** Leave empty or put `/` (deploy from root)
+   - Click "Deploy site"
+
+4. **Wait for deployment (30-60 seconds)**
+   - Netlify will show you a progress bar
+   - When complete, you'll see "Your site is live!" with a URL
+
+5. **Get your URL**
+   - Netlify gives you a random URL like: `https://random-name-12345.netlify.app`
+   - Click on it to test (you'll see an error - that's normal, we need to configure Epic first)
+
+6. **Optional: Customize your domain**
+   - Go to "Site settings" → "Domain management"
+   - Click "Options" → "Edit site name"
+   - Change to something like: `clinical-docs-viewer.netlify.app`
+   - Click "Save"
+
+**Your app is now live at:** `https://your-site-name.netlify.app`
+
+---
+
+### **Option B: GitHub Pages (Free Alternative)**
+
+**Why GitHub Pages:**
+- Completely free
+- Built into GitHub
+- Automatic HTTPS
+
+**Limitations:**
+- URL will be `https://yourusername.github.io/repository-name`
+- Slightly less flexible than Netlify
+
+**Steps:**
+
+1. **Enable GitHub Pages**
+   - Go to your repository on GitHub
+   - Click "Settings" (top right)
+   - Scroll down to "Pages" (left sidebar)
+   - Under "Source," select "Deploy from a branch"
+   - Under "Branch," select "main" and "/ (root)"
+   - Click "Save"
+
+2. **Wait for deployment (2-3 minutes)**
+   - GitHub will show "Your site is live at..."
+   - The URL will be: `https://yourusername.github.io/clinical-docs-viewer`
+
+3. **Test your site**
+   - Click the URL (you'll see errors - normal until Epic is configured)
+
+---
+
+### **Option C: Vercel (Alternative)**
+
+**Why Vercel:**
+- Very fast
+- Great developer experience
+- Free tier
+
+**Steps:**
+
+1. Go to https://vercel.com
+2. Sign up with GitHub
+3. Click "Add New" → "Project"
+4. Import your repository
+5. Click "Deploy"
+6. Get your URL: `https://your-app.vercel.app`
+
+---
+
+## **Phase 3: Register Your App with Epic**
+
+**Why:** Epic needs to know about your app before it can launch it. This creates trust and provides security credentials.
+
+---
+
+### **Step 1: Create an Epic Account**
+
+1. Go to: https://fhir.epic.com
+2. Click "Sign Up" (top right)
+3. Fill in your information:
+   - Name, email, organization (can be personal/student if testing)
+4. Verify your email
+5. Log in
+
+---
+
+### **Step 2: Create a New App**
+
+1. **After logging in**, click "Build Apps" (top menu)
+
+2. **Click "Create"** (for a new app)
+
+3. **Choose app type:** "Non-Production Client"
+   - **Why:** This is for testing. Production apps require Epic's review/approval
+
+4. **Fill in Application Details:**
+
+   **Application Name:**
+```
+   Clinical Documentation Viewer
+```
+   **Why:** This appears to users when they launch your app
+
+   **Application Audience:**
+```
+   Clinicians (or whoever will use it)
+```
+
+   **FHIR Specification:**
+```
+   R4
+```
+   **Why:** R4 is the current standard FHIR version
+
+   **Application Type:**
+```
+   Patient Standalone / Provider Standalone
+```
+   **Why:** This allows launching from within Epic's EHR
+
+5. **Configure Launch Settings:**
+
+   **Launch URI (Non-Production):**
+```
+   https://your-site-name.netlify.app/launch.html
+```
+   *(Replace with YOUR actual URL from Step 2)*
+   
+   **Why:** This is where Epic will send users when they click "Launch App"
+
+   **Redirect URI (Non-Production):**
+```
+   https://your-site-name.netlify.app/index.html
+```
+   **Why:** After users authorize, Epic redirects here with the access token
+
+6. **Select FHIR Resources (Scopes):**
+
+   Check these boxes:
+   - ✅ **Patient** (Read)
+   - ✅ **DocumentReference** (Read)
+
+   **Why:** These tell Epic what data your app needs access to
+
+7. **SMART on FHIR Settings:**
+   - ✅ Check "This application is SMART on FHIR"
+   - ✅ Check "Supports SMART Launch"
+
+8. **Click "Save & Ready for Sandbox"**
+
+---
+
+### **Step 3: Get Your Client ID**
+
+After saving, Epic shows you:
+```
+Client ID: a1b2c3d4-e5f6-7890-abcd-ef1234567890
