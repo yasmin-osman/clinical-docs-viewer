@@ -1,10 +1,14 @@
 // app.js
 
+console.log('App.js loaded');
+
 // Initialize the SMART on FHIR client
 FHIR.oauth2.ready()
     .then(client => {
-        console.log('SMART client ready');
+        console.log('✅ SMART client ready');
+        console.log('Client object:', client);
         console.log('Patient ID:', client.patient.id);
+        console.log('Access Token:', client.state.tokenResponse.access_token ? 'Present' : 'Missing');
         
         // Fetch patient data and documents in parallel
         Promise.all([
@@ -12,14 +16,17 @@ FHIR.oauth2.ready()
             loadDocuments(client)
         ])
         .then(() => {
+            console.log('✅ Data loaded successfully');
             document.getElementById('loading').style.display = 'none';
             document.getElementById('content').style.display = 'block';
         })
         .catch(error => {
+            console.error('❌ Error loading data:', error);
             showError('Failed to load data: ' + error.message);
         });
     })
     .catch(error => {
+        console.error('❌ Authorization failed:', error);
         showError('Authorization failed: ' + error.message);
     });
 
@@ -28,10 +35,12 @@ FHIR.oauth2.ready()
  */
 async function loadPatientData(client) {
     try {
+        console.log('📥 Fetching patient data...');
+        
         // Request patient resource from FHIR server
         const patient = await client.request(`Patient/${client.patient.id}`);
         
-        console.log('Patient data:', patient);
+        console.log('✅ Patient data received:', patient);
         
         // Extract and display patient name
         if (patient.name && patient.name.length > 0) {
@@ -43,6 +52,7 @@ async function loadPatientData(client) {
             ].filter(Boolean).join(' ');
             
             document.getElementById('patientName').textContent = fullName;
+            console.log('✅ Patient name set:', fullName);
         }
         
         // Display date of birth
@@ -54,12 +64,14 @@ async function loadPatientData(client) {
                 day: 'numeric'
             });
             document.getElementById('patientDOB').textContent = formatted;
+            console.log('✅ DOB set:', formatted);
         }
         
         // Display gender
         if (patient.gender) {
             const gender = patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1);
             document.getElementById('patientGender').textContent = gender;
+            console.log('✅ Gender set:', gender);
         }
         
         // Display Medical Record Number (MRN)
@@ -72,11 +84,12 @@ async function loadPatientData(client) {
             
             if (mrnIdentifier && mrnIdentifier.value) {
                 document.getElementById('patientMRN').textContent = mrnIdentifier.value;
+                console.log('✅ MRN set:', mrnIdentifier.value);
             }
         }
         
     } catch (error) {
-        console.error('Error loading patient data:', error);
+        console.error('❌ Error loading patient data:', error);
         throw error;
     }
 }
@@ -86,6 +99,8 @@ async function loadPatientData(client) {
  */
 async function loadDocuments(client) {
     try {
+        console.log('📥 Fetching documents...');
+        
         // Query DocumentReference resources for the patient
         const response = await client.request(
             `DocumentReference?patient=${client.patient.id}&_sort=-date&_count=50`,
@@ -95,7 +110,7 @@ async function loadDocuments(client) {
             }
         );
         
-        console.log('Documents response:', response);
+        console.log('✅ Documents response received:', response);
         
         const documentsList = document.getElementById('documentsList');
         
@@ -106,6 +121,8 @@ async function loadDocuments(client) {
         } else if (Array.isArray(response)) {
             documents = response;
         }
+        
+        console.log(`📄 Found ${documents.length} documents`);
         
         if (documents.length === 0) {
             documentsList.innerHTML = `
@@ -121,14 +138,17 @@ async function loadDocuments(client) {
             return createDocumentCard(doc);
         }).join('');
         
+        console.log('✅ Documents rendered');
+        
     } catch (error) {
-        console.error('Error loading documents:', error);
+        console.error('❌ Error loading documents:', error);
         
         // Show a message if documents can't be loaded
         const documentsList = document.getElementById('documentsList');
         documentsList.innerHTML = `
             <div class="empty-state">
                 <p>Unable to load documents. This may be due to permissions or data availability.</p>
+                <p style="font-size: 12px; margin-top: 10px;">Error: ${error.message}</p>
             </div>
         `;
     }
@@ -224,7 +244,7 @@ function showError(message) {
     const errorDiv = document.getElementById('error');
     errorDiv.textContent = message;
     errorDiv.style.display = 'block';
-    console.error(message);
+    console.error('Error displayed to user:', message);
 }
 
 /**
@@ -235,4 +255,3 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
