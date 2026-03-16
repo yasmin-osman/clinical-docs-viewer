@@ -462,14 +462,27 @@ async function viewDocument(docId, index) {
                 modalContent.innerHTML = `<div class="document-content">${escapeHtml(decoded)}</div>`;
             }
         } else if (attachment.contentType === 'application/pdf') {
-            // PDF - show link to open in new tab
+            // PDF - show link to open in new tab with authentication
             if (attachment.url) {
+                // Check if URL is relative (starts with Binary/) or absolute
+                let pdfUrl = attachment.url;
+                
+                // If relative URL, make it absolute
+                if (!pdfUrl.startsWith('http')) {
+                    // Get the base FHIR URL from the client
+                    const baseUrl = globalClient.state.serverUrl;
+                    pdfUrl = `${baseUrl}/${pdfUrl}`;
+                }
+                
                 modalContent.innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <p style="margin-bottom: 20px;">This is a PDF document.</p>
-                        <a href="${attachment.url}" target="_blank" class="view-button">
+                        <button class="view-button" onclick="openPdfInNewTab('${pdfUrl}')">
                             📄 Open PDF in New Tab
-                        </a>
+                        </button>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 15px;">
+                            Note: You may need to allow popups for this site.
+                        </p>
                     </div>
                 `;
             }
