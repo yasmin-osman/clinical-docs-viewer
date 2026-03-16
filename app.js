@@ -785,3 +785,39 @@ window.onclick = function(event) {
         modal.style.display = 'none';
     }
 }
+
+/**
+ * Open PDF with authentication in new tab
+ */
+async function openPdfInNewTab(url) {
+    try {
+        if (!globalClient) {
+            alert('FHIR client not ready');
+            return;
+        }
+        
+        // Fetch PDF with authentication
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${globalClient.state.tokenResponse.access_token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+        }
+        
+        // Get PDF as blob
+        const blob = await response.blob();
+        
+        // Create object URL
+        const pdfUrl = URL.createObjectURL(blob);
+        
+        // Open in new tab
+        window.open(pdfUrl, '_blank');
+        
+    } catch (error) {
+        console.error('Error opening PDF:', error);
+        alert('Failed to open PDF: ' + error.message);
+    }
+}
